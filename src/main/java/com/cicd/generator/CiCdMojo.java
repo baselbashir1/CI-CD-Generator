@@ -46,18 +46,20 @@ public class CiCdMojo extends AbstractMojo {
         try (PrintWriter writer = new PrintWriter(dockerfile)) {
             String baseImage = "openjdk:22-jdk-slim";
             writer.println("FROM " + baseImage);
+            writer.println();
             writer.println("WORKDIR /app");
+            writer.println();
             String finalName = project.getBuild().getFinalName() + "." + project.getPackaging();
             writer.println("COPY target/" + finalName + " " + finalName);
+            writer.println();
             writer.println("EXPOSE 8080");
-
+            writer.println();
             String cmd = "\"java\", \"-jar\", \"" + finalName + "\"";
-
             String contextPath = project.getBuild().getFinalName();
             if (!contextPath.isEmpty()) {
                 cmd += ", \"--server.servlet.context-path=/" + contextPath + "\"";
             }
-            writer.println("CMD [" + cmd + "]");
+            writer.print("CMD [" + cmd + "]");
         }
         getLog().info("Dockerfile created successfully at path: " + dockerfile.getAbsolutePath());
     }
