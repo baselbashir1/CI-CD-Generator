@@ -1,0 +1,36 @@
+name: {{config.projectName}} CI/CD
+on:
+  push:
+    branches: [ "{{config.mainBranch}}" ]
+  pull_request:
+    branches: [ "{{config.mainBranch}}" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up JDK {{config.jdkVersion}}
+      uses: actions/setup-java@v3
+      with:
+        java-version: '{{config.jdkVersion}}'
+        distribution: 'temurin'
+        cache: {{config.buildTool}}
+
+    - name: Build with {{config.buildTool}}
+      run: |
+        {{#config.buildTool.equals("maven")}}
+        mvn -B package
+        {{/config.buildTool.equals("maven")}}
+        {{#config.buildTool.equals("gradle")}}
+        ./gradlew build
+        {{/config.buildTool.equals("gradle")}}
+
+    {{#config.dockerImage}}
+    - name: Build and push Docker image
+      if: github.ref == 'refs/heads/{{config.mainBranch}}'
+      run: |
+        docker build -t {{.}}:${{ github.sha }} .
+        echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+        docker push {{.}}:${{ github.sha }}
+    {{/config.dockerImage}}
