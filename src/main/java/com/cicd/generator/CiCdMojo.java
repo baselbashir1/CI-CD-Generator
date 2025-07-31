@@ -54,7 +54,7 @@ public class CiCdMojo extends AbstractMojo {
             writer.println("EXPOSE 8080");
             writer.println();
             String cmd = "\"java\", \"-jar\", \"" + finalName + "\"";
-            if (!contextPath.isEmpty()) {
+            if (contextPath != null && !contextPath.isEmpty()) {
                 cmd += ", \"--server.servlet.context-path=/" + contextPath + "\"";
             }
             writer.print("CMD [" + cmd + "]");
@@ -72,12 +72,38 @@ public class CiCdMojo extends AbstractMojo {
     }
 
     private void runDockerContainer() throws Exception {
+        removeExistingContainer();
+
         getLog().info("Running Docker container: " + containerName);
         ProcessBuilder builder = new ProcessBuilder(
                 "docker", "run", "-d", "--name", containerName, "-p", portMapping, imageName
         );
         executeCommand(builder);
         getLog().info("Docker container run successfully");
+    }
+
+    private void removeExistingContainer() {
+        getLog().info("Checking for existing container: " + containerName);
+        ProcessBuilder stopBuilder = new ProcessBuilder(
+                "docker", "stop", containerName
+        );
+        ProcessBuilder removeBuilder = new ProcessBuilder(
+                "docker", "rm", containerName
+        );
+
+        try {
+            executeCommand(stopBuilder);
+            getLog().info("Stopped container: " + containerName);
+        } catch (Exception e) {
+            getLog().debug("Container stop failed (might not exist or already stopped): " + containerName);
+        }
+
+        try {
+            executeCommand(removeBuilder);
+            getLog().info("Removed container: " + containerName);
+        } catch (Exception e) {
+            getLog().debug("Container removal failed (might not exist): " + containerName);
+        }
     }
 
     private void executeCommand(ProcessBuilder processBuilder) throws Exception {

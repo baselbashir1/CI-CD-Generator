@@ -11,9 +11,6 @@ public class PluginRunnerTest {
     public void executeMojoDirectly() throws Exception {
         CiCdMojo mojo = new CiCdMojo();
 
-        Field projectField = CiCdMojo.class.getDeclaredField("project");
-        projectField.setAccessible(true);
-
         MavenProject project = new MavenProject();
         project.setPackaging("jar");
         project.setArtifactId("basel.generator");
