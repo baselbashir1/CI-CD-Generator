@@ -11,20 +11,29 @@ public class PluginRunnerTest {
     public void executeMojoDirectly() throws Exception {
         CiCdMojo mojo = new CiCdMojo();
 
-        // Configure Mojo parameters via reflection
         Field projectField = CiCdMojo.class.getDeclaredField("project");
         projectField.setAccessible(true);
 
-        // Create a minimal Maven project
         MavenProject project = new MavenProject();
         project.setPackaging("jar");
         project.setArtifactId("basel.generator");
         project.getBuild().setFinalName("BASEL");
 
-        // Set parameters
-        projectField.set(mojo, project);
+        String contextPath = project.getBuild().getFinalName();
 
-        // Execute the Mojo
+        setField(mojo, "project", project);
+        setField(mojo, "baseImage", "openjdk:22-jdk-slim"); // "eclipse-temurin:17-jdk-alpine"
+        setField(mojo, "imageName", "basel-image");
+        setField(mojo, "containerName", "basel-container");
+        setField(mojo, "portMapping", "8080:8080");
+        setField(mojo, "contextPath", contextPath);
+
         mojo.execute();
+    }
+
+    private void setField(Object target, String fieldName, Object value) throws NoSuchFieldException, IllegalAccessException {
+        Field field = target.getClass().getDeclaredField(fieldName);
+        field.setAccessible(true);
+        field.set(target, value);
     }
 }

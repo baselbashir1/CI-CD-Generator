@@ -53,7 +53,6 @@
             <version>2.2.1</version>
         </dependency>
 
-
         <!-- Maven Embedder -->
         <dependency>
             <groupId>org.apache.maven</groupId>
