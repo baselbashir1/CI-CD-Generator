@@ -1,0 +1,11 @@
+app:
+  base-image: openjdk:22-jdk-slim
+  image-name: basel-image
+  container-name: basel-container
+  port-mapping: 8080:8080
+  context-path: BASEL
+  jar-path: target/
+  jar-name: BASEL.jar
+  working-directory: /app
+  exposed-port: 8080
+  remove-existing-container: true

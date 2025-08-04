@@ -20,13 +20,14 @@
 
     <name>CI/CD Generator Library</name>
     <description>A reusable library for Docker-based CI/CD operations</description>
-    <url>https://github.com/your-org/cicd-generator-lib</url>
+    <url>https://github.com/baselbashir1/CI-CD-Generator</url>
 
     <properties>
         <java.version>17</java.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <lombok.version>1.18.30</lombok.version>
     </properties>
 
     <dependencies>
@@ -34,70 +35,63 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-
-        <!-- JUnit for testing -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>5.9.2</version>
             <scope>test</scope>
         </dependency>
-
-        <!-- Mockito for mocking -->
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>5.1.1</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 
     <build>
+        <finalName>BASEL</finalName>
         <plugins>
-            <!-- Compiler Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version>
+                <version>3.12.1</version>
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
                     <release>${java.version}</release>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
 
-            <!-- Surefire Plugin for tests -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.0.0-M9</version>
             </plugin>
 
-            <!-- Source Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>3.2.1</version>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <!--<version>3.0.0-M9</version>-->
                 <executions>
                     <execution>
-                        <id>attach-sources</id>
                         <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- Javadoc Plugin -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.4.1</version>
-                <executions>
-                    <execution>
-                        <id>attach-javadocs</id>
-                        <goals>
-                            <goal>jar</goal>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
                         </goals>
                     </execution>
                 </executions>
@@ -105,7 +99,6 @@
         </plugins>
     </build>
 
-    <!-- Distribution Management for publishing -->
     <distributionManagement>
         <repository>
             <id>releases</id>
@@ -127,15 +120,15 @@
 
     <developers>
         <developer>
-            <id>your-id</id>
-            <name>Your Name</name>
-            <email>your.email@example.com</email>
+            <id>basel-generator</id>
+            <name>Basel Bashir</name>
+            <email>eng.baselbashir@gmail.com</email>
         </developer>
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/your-org/cicd-generator-lib.git</connection>
-        <developerConnection>scm:git:ssh://github.com/your-org/cicd-generator-lib.git</developerConnection>
-        <url>https://github.com/your-org/cicd-generator-lib/tree/main</url>
+        <connection>scm:git:git://github.com/baselbashir1/CI-CD-Generator.git</connection>
+        <developerConnection>scm:git:ssh://github.com/baselbashir1/CI-CD-Generator.git</developerConnection>
+        <url>https://github.com/baselbashir1/CI-CD-Generator/tree/master</url>
     </scm>
 </project>
