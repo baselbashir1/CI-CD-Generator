@@ -1,15 +1,61 @@
 package com.cicd.generator;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.PrintWriter;
 
 @Slf4j
+@Component
 public class CiCdGenerator {
 
-    public CiCdExecutionResult execute(CiCdConfig config) {
+    @Value("${app.base-image}")
+    private String baseImage;
+
+    @Value("${app.image-name}")
+    private String imageName;
+
+    @Value("${app.container-name}")
+    private String containerName;
+
+    @Value("${app.port-mapping}")
+    private String portMapping;
+
+    @Value("${app.context-path}")
+    private String contextPath;
+
+    @Value("${app.jar-path}")
+    private String jarPath;
+
+    @Value("${app.jar-name}")
+    private String jarName;
+
+    @Value("${app.working-directory}")
+    private String workingDirectory;
+
+    @Value("${app.exposed-port}")
+    private int exposedPort;
+
+    @Value("${app.remove-existing-container}")
+    private boolean removeExistingContainer;
+
+    public CiCdExecutionResult execute() {
         try {
+            CiCdConfig config = CiCdConfig.builder()
+                    .baseImage(baseImage)
+                    .imageName(imageName)
+                    .containerName(containerName)
+                    .portMapping(portMapping)
+                    .contextPath(contextPath)
+                    .jarPath(jarPath)
+                    .jarName(jarName)
+                    .workingDirectory(workingDirectory)
+                    .exposedPort(exposedPort)
+                    .removeExistingContainer(removeExistingContainer)
+                    .build();
+
             String dockerfilePath = createDockerfile(config);
             buildDockerImage(config);
             runDockerContainer(config);

@@ -9,3 +9,6 @@ app:
   working-directory: /app
   exposed-port: 8080
   remove-existing-container: true
+
+server:
+  port: 8888
