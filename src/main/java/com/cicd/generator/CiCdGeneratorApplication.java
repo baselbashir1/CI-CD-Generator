@@ -36,11 +36,11 @@ public class CiCdGeneratorApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (!isRunningFromJar()) {
-            File jarFile = new File(filePah + fileName);
-            if (!jarFile.exists()) {
+        if (!isRunning()) {
+            File file = new File(filePah + fileName);
+            if (!file.exists()) {
                 try {
-                    buildProjectWithMaven(packaging);
+                    buildProjectWithMaven();
                 } catch (Exception e) {
                     log.error("Failed to build project", e);
                     return;
@@ -57,34 +57,16 @@ public class CiCdGeneratorApplication implements CommandLineRunner {
         }
     }
 
-    private boolean isRunningFromJar() {
+    private boolean isRunning() {
         try {
             URL resource = getClass().getResource(getClass().getSimpleName() + ".class");
-            return resource != null && resource.toString().startsWith("jar:");
+            return resource != null && resource.toString().startsWith(packaging + ":");
         } catch (Exception e) {
             return false;
         }
     }
 
-//    private void buildProjectWithMaven() throws Exception {
-//        log.info("Building project with Maven...");
-//        String command = isWindows() ? "mvnw.cmd" : "./mvnw";
-//
-//        ProcessBuilder builder = new ProcessBuilder(command, "clean", "package");
-//
-//        Map<String, String> env = builder.environment();
-//        env.put("JAVA_HOME", System.getProperty("java.home"));
-//
-//        builder.inheritIO();
-//        Process process = builder.start();
-//        int exitCode = process.waitFor();
-//        if (exitCode != 0) {
-//            throw new RuntimeException("Maven build failed with exit code: " + exitCode);
-//        }
-//        log.info("Project built successfully");
-//    }
-
-    private void buildProjectWithMaven(String packagingType) throws Exception {
+    private void buildProjectWithMaven() throws Exception {
         log.info("Building project with Maven...");
         String command = isWindows() ? "mvnw.cmd" : "./mvnw";
 
@@ -93,13 +75,11 @@ public class CiCdGeneratorApplication implements CommandLineRunner {
         mavenCommands.add("clean");
         mavenCommands.add("package");
 
-        // Add finalName override (remove .jar extension)
-        //String finalName = fileName.replace(".jar", "");
         String finalName = contextPath;
-        mavenCommands.add("-DfinalName=" + finalName); // Pass to Maven
+        mavenCommands.add("-DfinalName=" + finalName);
 
-        if (packagingType != null && !packagingType.trim().isEmpty()) {
-            mavenCommands.add("-Dpackaging.type=" + packagingType.trim());
+        if (packaging != null && !packaging.trim().isEmpty()) {
+            mavenCommands.add("-Dpackaging.type=" + packaging.trim());
         }
 
         ProcessBuilder builder = new ProcessBuilder(mavenCommands);
@@ -112,7 +92,7 @@ public class CiCdGeneratorApplication implements CommandLineRunner {
         if (exitCode != 0) {
             throw new RuntimeException("Maven build failed with exit code: " + exitCode);
         }
-        log.info("Project built successfully with finalName: {}", finalName);
+        log.info("Project built successfully as {} with finalName: {}", packaging, finalName);
     }
 
     private boolean isWindows() {
