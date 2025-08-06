@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -20,19 +22,25 @@ public class CiCdGeneratorApplication implements CommandLineRunner {
 
     private final CiCdGenerator generator;
 
-    @Value("${app.jar-path}")
-    private String jarPath;
+    @Value("${app.file-path}")
+    private String filePah;
 
-    @Value("${app.jar-name}")
-    private String jarName;
+    @Value("${app.file-name}")
+    private String fileName;
+
+    @Value("${app.packaging}")
+    private String packaging;
+
+    @Value("${app.context-path}")
+    private String contextPath;
 
     @Override
     public void run(String... args) {
         if (!isRunningFromJar()) {
-            File jarFile = new File(jarPath + jarName);
+            File jarFile = new File(filePah + fileName);
             if (!jarFile.exists()) {
                 try {
-                    buildProjectWithMaven();
+                    buildProjectWithMaven(packaging);
                 } catch (Exception e) {
                     log.error("Failed to build project", e);
                     return;
@@ -58,24 +66,53 @@ public class CiCdGeneratorApplication implements CommandLineRunner {
         }
     }
 
-    private void buildProjectWithMaven() throws Exception {
+//    private void buildProjectWithMaven() throws Exception {
+//        log.info("Building project with Maven...");
+//        String command = isWindows() ? "mvnw.cmd" : "./mvnw";
+//
+//        ProcessBuilder builder = new ProcessBuilder(command, "clean", "package");
+//
+//        Map<String, String> env = builder.environment();
+//        env.put("JAVA_HOME", System.getProperty("java.home"));
+//
+//        builder.inheritIO();
+//        Process process = builder.start();
+//        int exitCode = process.waitFor();
+//        if (exitCode != 0) {
+//            throw new RuntimeException("Maven build failed with exit code: " + exitCode);
+//        }
+//        log.info("Project built successfully");
+//    }
+
+    private void buildProjectWithMaven(String packagingType) throws Exception {
         log.info("Building project with Maven...");
         String command = isWindows() ? "mvnw.cmd" : "./mvnw";
 
-        //String jarBaseName = jarName.replace(".jar", "");
-        //ProcessBuilder builder = new ProcessBuilder(command, "clean", "package", "-Djar.final.name=" + jarBaseName);
-        ProcessBuilder builder = new ProcessBuilder(command, "clean", "package");
+        List<String> mavenCommands = new ArrayList<>();
+        mavenCommands.add(command);
+        mavenCommands.add("clean");
+        mavenCommands.add("package");
 
+        // Add finalName override (remove .jar extension)
+        //String finalName = fileName.replace(".jar", "");
+        String finalName = contextPath;
+        mavenCommands.add("-DfinalName=" + finalName); // Pass to Maven
+
+        if (packagingType != null && !packagingType.trim().isEmpty()) {
+            mavenCommands.add("-Dpackaging.type=" + packagingType.trim());
+        }
+
+        ProcessBuilder builder = new ProcessBuilder(mavenCommands);
         Map<String, String> env = builder.environment();
         env.put("JAVA_HOME", System.getProperty("java.home"));
-
         builder.inheritIO();
+
         Process process = builder.start();
         int exitCode = process.waitFor();
         if (exitCode != 0) {
             throw new RuntimeException("Maven build failed with exit code: " + exitCode);
         }
-        log.info("Project built successfully");
+        log.info("Project built successfully with finalName: {}", finalName);
     }
 
     private boolean isWindows() {

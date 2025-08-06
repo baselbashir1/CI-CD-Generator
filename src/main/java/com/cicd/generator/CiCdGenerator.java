@@ -26,11 +26,11 @@ public class CiCdGenerator {
     @Value("${app.context-path}")
     private String contextPath;
 
-    @Value("${app.jar-path}")
-    private String jarPath;
+    @Value("${app.file-path}")
+    private String filePath;
 
-    @Value("${app.jar-name}")
-    private String jarName;
+    @Value("${app.file-name}")
+    private String fileName;
 
     @Value("${app.working-directory}")
     private String workingDirectory;
@@ -49,8 +49,8 @@ public class CiCdGenerator {
                     .containerName(containerName)
                     .portMapping(portMapping)
                     .contextPath(contextPath)
-                    .jarPath(jarPath)
-                    .jarName(jarName)
+                    .filePath(filePath)
+                    .fileName(fileName)
                     .workingDirectory(workingDirectory)
                     .exposedPort(exposedPort)
                     .removeExistingContainer(removeExistingContainer)
@@ -78,12 +78,12 @@ public class CiCdGenerator {
             writer.println();
             writer.println("WORKDIR " + config.getWorkingDirectory());
             writer.println();
-            writer.println("COPY " + config.getJarPath() + config.getJarName() + " " + config.getJarName());
+            writer.println("COPY " + config.getFilePath() + config.getFileName() + " " + config.getFileName());
             writer.println();
             writer.println("EXPOSE " + config.getExposedPort());
             writer.println();
             StringBuilder cmd = new StringBuilder();
-            cmd.append("CMD [\"java\", \"-jar\", \"").append(config.getJarName()).append("\"");
+            cmd.append("CMD [\"java\", \"-jar\", \"").append(config.getFileName()).append("\"");
             if (config.getContextPath() != null && !config.getContextPath().isEmpty()) {
                 cmd.append(", \"--server.servlet.context-path=/").append(config.getContextPath()).append("\"");
             }
