@@ -26,6 +26,9 @@ public class CiCdGenerator {
     @Value("${app.context-path}")
     private String contextPath;
 
+    @Value("${app.packaging}")
+    private String packaging;
+
     @Value("${app.file-path}")
     private String filePath;
 
@@ -49,6 +52,7 @@ public class CiCdGenerator {
                     .containerName(containerName)
                     .portMapping(portMapping)
                     .contextPath(contextPath)
+                    .packaging(packaging)
                     .filePath(filePath)
                     .fileName(fileName)
                     .workingDirectory(workingDirectory)
@@ -70,6 +74,16 @@ public class CiCdGenerator {
     private String createDockerfile(CiCdConfig config) throws Exception {
         log.info("Creating Dockerfile");
 
+        /* to create the Dockerfile in the target/ path
+        File targetDir = new File("target");
+        if (!targetDir.exists()) {
+            targetDir.mkdirs();
+        }
+
+        File dockerfile = new File(targetDir, "Dockerfile");
+        String dockerfilePath = dockerfile.getAbsolutePath();
+         */
+
         File dockerfile = new File("Dockerfile");
         String dockerfilePath = dockerfile.getAbsolutePath();
 
@@ -79,6 +93,7 @@ public class CiCdGenerator {
             writer.println("WORKDIR " + config.getWorkingDirectory());
             writer.println();
             writer.println("COPY " + config.getFilePath() + config.getFileName() + " " + config.getFileName());
+            //writer.println("COPY " + config.getFileName() + " " + config.getFileName());
             writer.println();
             writer.println("EXPOSE " + config.getExposedPort());
             writer.println();
@@ -97,6 +112,10 @@ public class CiCdGenerator {
 
     private void buildDockerImage(CiCdConfig config) throws Exception {
         log.info("Building Docker image: {}", config.getImageName());
+
+//        ProcessBuilder builder = new ProcessBuilder(
+//                "docker", "build", "-f", "target/Dockerfile", "-t", config.getImageName(), "."
+//        );
 
         ProcessBuilder builder = new ProcessBuilder(
                 "docker", "build", "-t", config.getImageName(), "."

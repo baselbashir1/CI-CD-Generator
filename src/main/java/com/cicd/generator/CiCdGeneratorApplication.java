@@ -9,7 +9,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +22,7 @@ public class CiCdGeneratorApplication implements CommandLineRunner {
     private final CiCdGenerator generator;
 
     @Value("${app.file-path}")
-    private String filePah;
+    private String filePath;
 
     @Value("${app.file-name}")
     private String fileName;
@@ -36,33 +35,32 @@ public class CiCdGeneratorApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (!isRunning()) {
-            File file = new File(filePah + fileName);
-            if (!file.exists()) {
-                try {
-                    buildProjectWithMaven();
-                } catch (Exception e) {
-                    log.error("Failed to build project", e);
-                    return;
-                }
-            }
-        }
-
-        CiCdExecutionResult result = generator.execute();
-
-        if (result.success()) {
-            System.out.println("Spring Boot app containerized successfully!");
-        } else {
-            System.err.println("Failed to containerize Spring Boot app: " + result.message());
-        }
-    }
-
-    private boolean isRunning() {
         try {
-            URL resource = getClass().getResource(getClass().getSimpleName() + ".class");
-            return resource != null && resource.toString().startsWith(packaging + ":");
+            buildProjectWithMaven();
+
+            File packagedFile = new File(filePath + fileName);
+            if (!packagedFile.exists()) {
+                log.error("Packaged file not found at: {}", packagedFile.getAbsolutePath());
+                System.err.println("Failed to find packaged file: " + packagedFile.getAbsolutePath());
+                return;
+            }
+
+            log.info("Packaged file found: {}", packagedFile.getAbsolutePath());
+
+            CiCdExecutionResult result = generator.execute();
+
+            if (result.success()) {
+                System.out.println("Spring Boot app containerized successfully!");
+                System.out.println("Dockerfile created at: " + result.dockerfilePath());
+                System.out.println("Packaged app available at: " + packagedFile.getAbsolutePath());
+            } else {
+                System.err.println("Failed to containerize Spring Boot app: " + result.message());
+            }
         } catch (Exception e) {
-            return false;
+            log.error("Application execution failed", e);
+            System.err.println("Application execution failed: " + e.getMessage());
+        } finally {
+            System.exit(0);
         }
     }
 
@@ -74,9 +72,10 @@ public class CiCdGeneratorApplication implements CommandLineRunner {
         mavenCommands.add(command);
         mavenCommands.add("clean");
         mavenCommands.add("package");
+        mavenCommands.add("-DskipTests");
 
         String finalName = contextPath;
-        mavenCommands.add("-DfinalName=" + finalName);
+        mavenCommands.add("-Dbuild.name=" + finalName);
 
         if (packaging != null && !packaging.trim().isEmpty()) {
             mavenCommands.add("-Dpackaging.type=" + packaging.trim());
