@@ -61,8 +61,11 @@ public class CiCdGenerator {
                     .build();
 
             String dockerfilePath = createDockerfile(config);
-            buildDockerImage(config);
-            runDockerContainer(config);
+            createDockerComposeFile(config);
+            createGitlabCiFile(config);
+            // buildDockerImage(config);
+            // runDockerContainer(config);
+            runDockerCompose(config);
 
             return new CiCdExecutionResult(true, "CI/CD pipeline executed successfully", null, dockerfilePath);
         } catch (Exception e) {
@@ -74,16 +77,6 @@ public class CiCdGenerator {
     private String createDockerfile(CiCdConfig config) throws Exception {
         log.info("Creating Dockerfile");
 
-        /* to create the Dockerfile in the target/ path
-        File targetDir = new File("target");
-        if (!targetDir.exists()) {
-            targetDir.mkdirs();
-        }
-
-        File dockerfile = new File(targetDir, "Dockerfile");
-        String dockerfilePath = dockerfile.getAbsolutePath();
-         */
-
         File dockerfile = new File("Dockerfile");
         String dockerfilePath = dockerfile.getAbsolutePath();
 
@@ -93,7 +86,6 @@ public class CiCdGenerator {
             writer.println("WORKDIR " + config.getWorkingDirectory());
             writer.println();
             writer.println("COPY " + config.getFilePath() + config.getFileName() + " " + config.getFileName());
-            //writer.println("COPY " + config.getFileName() + " " + config.getFileName());
             writer.println();
             writer.println("EXPOSE " + config.getExposedPort());
             writer.println();
@@ -103,7 +95,7 @@ public class CiCdGenerator {
                 cmd.append(", \"--server.servlet.context-path=/").append(config.getContextPath()).append("\"");
             }
             cmd.append("]");
-            writer.println(cmd);
+            writer.print(cmd);
         }
 
         log.info("Dockerfile created successfully at: {}", dockerfilePath);
@@ -112,10 +104,6 @@ public class CiCdGenerator {
 
     private void buildDockerImage(CiCdConfig config) throws Exception {
         log.info("Building Docker image: {}", config.getImageName());
-
-//        ProcessBuilder builder = new ProcessBuilder(
-//                "docker", "build", "-f", "target/Dockerfile", "-t", config.getImageName(), "."
-//        );
 
         ProcessBuilder builder = new ProcessBuilder(
                 "docker", "build", "-t", config.getImageName(), "."
@@ -165,6 +153,67 @@ public class CiCdGenerator {
         } catch (Exception e) {
             log.debug("Container removal failed (might not exist): {}", config.getContainerName());
         }
+    }
+
+    private void createDockerComposeFile(CiCdConfig config) throws Exception {
+        log.info("Creating docker-compose.yml");
+        File composeFile = new File("docker-compose.yml");
+        try (PrintWriter writer = new PrintWriter(composeFile)) {
+            writer.println("services:");
+            writer.println("  " + "app-service" + ":");
+            writer.println("    build:");
+            writer.println("      context: .");
+            writer.println("      dockerfile: Dockerfile");
+            writer.println("    container_name: " + config.getContainerName());
+            writer.println("    ports:");
+            writer.println("      - \"" + config.getPortMapping() + "\"");
+            writer.print("    restart: always");
+        }
+        log.info("docker-compose.yml created at: {}", composeFile.getAbsolutePath());
+    }
+
+    private void runDockerCompose(CiCdConfig config) throws Exception {
+        log.info("Removing existing containers with docker-compose");
+        ProcessBuilder downBuilder = new ProcessBuilder("docker-compose", "down");
+        executeCommand(downBuilder);
+
+        log.info("Building and starting containers with docker-compose");
+        ProcessBuilder upBuilder = new ProcessBuilder(
+                "docker-compose", "up", "-d", "--build", "--force-recreate"
+        );
+        executeCommand(upBuilder);
+    }
+
+    private void createGitlabCiFile(CiCdConfig config) throws Exception {
+        log.info("Creating .gitlab-ci.yml");
+        File gitlabCiFile = new File(".gitlab-ci.yml");
+        try (PrintWriter writer = new PrintWriter(gitlabCiFile)) {
+            writer.println("stages:");
+            writer.println("  - build");
+            writer.println("  - deploy");
+            writer.println();
+            writer.println("variables:");
+            writer.println("  IMAGE_NAME: " + config.getImageName());
+            writer.println("  CONTAINER_NAME: " + config.getContainerName());
+            writer.println("  PORT_MAPPING: \"" + config.getPortMapping() + "\"");
+            writer.println();
+            writer.println("build:");
+            writer.println("  stage: build");
+            writer.println("  script:");
+            writer.println("    - docker build -t $IMAGE_NAME .");
+            writer.println("  only:");
+            writer.println("    - main");
+            writer.println();
+            writer.println("deploy:");
+            writer.println("  stage: deploy");
+            writer.println("  script:");
+            writer.println("    - docker stop $CONTAINER_NAME || true"); // Graceful cleanup
+            writer.println("    - docker rm $CONTAINER_NAME || true");
+            writer.println("    - docker run -d --name $CONTAINER_NAME -p $PORT_MAPPING $IMAGE_NAME");
+            writer.println("  only:");
+            writer.print("    - main");
+        }
+        log.info(".gitlab-ci.yml created at: {}", gitlabCiFile.getAbsolutePath());
     }
 
     private void executeCommand(ProcessBuilder processBuilder) throws Exception {

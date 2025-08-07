@@ -52,6 +52,8 @@ public class CiCdGeneratorApplication implements CommandLineRunner {
             if (result.success()) {
                 System.out.println("Spring Boot app containerized successfully!");
                 System.out.println("Dockerfile created at: " + result.dockerfilePath());
+                System.out.println("docker-compose.yml created at: " + result.dockerfilePath());
+                System.out.println("gitlab-ci.yml created at: " + result.dockerfilePath());
                 System.out.println("Packaged app available at: " + packagedFile.getAbsolutePath());
             } else {
                 System.err.println("Failed to containerize Spring Boot app: " + result.message());
