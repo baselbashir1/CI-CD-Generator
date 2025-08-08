@@ -1,15 +1,6 @@
 app:
-  base-image: openjdk:22-jdk-slim
-  image-name: basel-image
-  container-name: basel-container
-  port-mapping: 8080:8080
   context-path: BASEL
   packaging: war
-  file-path: target/
-  file-name: ${app.context-path}.${app.packaging}
-  working-directory: /app
-  exposed-port: 8080
-  remove-existing-container: true
 
 server:
   port: 8888

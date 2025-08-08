@@ -21,12 +21,6 @@ public class CiCdGeneratorApplication implements CommandLineRunner {
 
     private final CiCdGenerator generator;
 
-    @Value("${app.file-path}")
-    private String filePath;
-
-    @Value("${app.file-name}")
-    private String fileName;
-
     @Value("${app.packaging}")
     private String packaging;
 
@@ -38,7 +32,7 @@ public class CiCdGeneratorApplication implements CommandLineRunner {
         try {
             buildProjectWithMaven();
 
-            File packagedFile = new File(filePath + fileName);
+            File packagedFile = new File("target/" + contextPath + "." + packaging);
             if (!packagedFile.exists()) {
                 log.error("Packaged file not found at: {}", packagedFile.getAbsolutePath());
                 System.err.println("Failed to find packaged file: " + packagedFile.getAbsolutePath());

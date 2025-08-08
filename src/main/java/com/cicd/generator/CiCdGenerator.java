@@ -11,16 +11,16 @@ import java.io.PrintWriter;
 @Component
 public class CiCdGenerator {
 
-    @Value("${app.base-image}")
+    @Value("${app.base-image:openjdk:22-jdk-slim}")
     private String baseImage;
 
-    @Value("${app.image-name}")
+    @Value("${app.image-name:app-image}")
     private String imageName;
 
-    @Value("${app.container-name}")
+    @Value("${app.container-name:app-container}")
     private String containerName;
 
-    @Value("${app.port-mapping}")
+    @Value("${app.port-mapping:8080:8080}")
     private String portMapping;
 
     @Value("${app.context-path}")
@@ -29,19 +29,16 @@ public class CiCdGenerator {
     @Value("${app.packaging}")
     private String packaging;
 
-    @Value("${app.file-path}")
+    @Value("${app.file-path:target/}")
     private String filePath;
 
-    @Value("${app.file-name}")
-    private String fileName;
-
-    @Value("${app.working-directory}")
+    @Value("${app.working-directory:/app}")
     private String workingDirectory;
 
-    @Value("${app.exposed-port}")
+    @Value("${app.exposed-port:8080}")
     private int exposedPort;
 
-    @Value("${app.remove-existing-container}")
+    @Value("${app.remove-existing-container:true}")
     private boolean removeExistingContainer;
 
     public CiCdExecutionResult execute() {
@@ -54,7 +51,7 @@ public class CiCdGenerator {
                     .contextPath(contextPath)
                     .packaging(packaging)
                     .filePath(filePath)
-                    .fileName(fileName)
+                    .fileName(contextPath + "." + packaging)
                     .workingDirectory(workingDirectory)
                     .exposedPort(exposedPort)
                     .removeExistingContainer(removeExistingContainer)
